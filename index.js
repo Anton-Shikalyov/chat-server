@@ -1,19 +1,14 @@
 const express = require("express");
-const { createMessage, 
-        readMessages, 
-        updateMessage,
-        findOneMessage,
-        findCommentsForMessage } = require('./dataBase');
 const cors = require('cors');
+const dataBase = require('./dataBase');
 const app = express();
 
 app.use(cors());
 app.use(express.json()); 
 
 app.post("/", (request, response) => {
-    console.log('Received request:', request.body);
     const base64Image = Buffer.from(request.body.MEDIA).toString('base64');
-    createMessage(request.body.USER_NAME,
+    dataBase.createMessage(request.body.USER_NAME,
                      request.body.EMAIL,
                      request.body.HOME_PAGE,
                      request.body.MESSAGE,
@@ -25,19 +20,16 @@ app.post("/", (request, response) => {
 });
 
 app.post("/message/:messageID",async (request, response) => {
-  console.log('Received request:', request.body);
   const base64Image = Buffer.from(request.body.MEDIA).toString('base64');
   try {
-    // console.log(request.params["messageID"]);
-    // updateMessage(request.params["messageID"])
-    await createMessage(
+    await dataBase.createMessage(
       request.body.USER_NAME,
       request.body.EMAIL,
       request.body.HOME_PAGE,
       request.body.MESSAGE,
       base64Image,
       request.params["messageID"],
-      await updateMessage(request.params["messageID"]),
+      await dataBase.updateMessage(request.params["messageID"]),
       request.body.ID_IN_COMMENTS
     );
   
@@ -56,14 +48,15 @@ app.get("/page/:pageID", async (request, response) => {
     let message;
     do {
       i++;
-      console.log("Fetching message for index:", i);
-      message = await findOneMessage(i);
-      console.log("Received message:", message);
+      message = await dataBase.findOneMessage(i);
       if (message) {
         messages.push(message);
+        const comments = await dataBase.findCommentsForMessage(i);
+        if (comments != null) {
+          messages.push(comments); 
+        }
       }
     } while (i != request.params["pageID"] * 25 && message != undefined);
-
     response.send(messages);
   } catch (error) {
     console.error('Error creating message:', error);
@@ -74,7 +67,7 @@ app.get("/page/:pageID", async (request, response) => {
 
 app.get("/", async (request, response) => {
   try {
-    const messages = await findCommentsForMessage(1);
+    const messages = await dataBase.findCommentsForMessage(1);
     response.send(messages); 
   } catch (error) {
     console.error('Error handling request:', error);

@@ -112,7 +112,7 @@ async function findCommentsForMessage(ID) {
     return messages;
   } catch (error) {
     console.error('Error finding comments:', error);
-    throw error; // Вы можете бросить ошибку или вернуть null, в зависимости от ваших потребностей
+    throw error; 
   }
 }
 
